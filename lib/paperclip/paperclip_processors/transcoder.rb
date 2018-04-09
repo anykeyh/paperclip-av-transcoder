@@ -1,3 +1,5 @@
+require "timeout"
+
 module Paperclip
   class Transcoder < Processor
     attr_accessor :geometry, :format, :whiny, :convert_options
@@ -73,8 +75,11 @@ module Paperclip
         end
 
         begin
-          @cli.run
-          log "Successfully transcoded #{@basename} to #{dst}"
+          #FIXME: 30 minutes timeout for now to cancel when FFMpeg is stucked.
+          Timeout::timeout(1800) {
+            @cli.run
+            log "Successfully transcoded #{@basename} to #{dst}"
+          }
         rescue Cocaine::ExitStatusError => e
           raise Paperclip::Error, "error while transcoding #{@basename}: #{e}" if @whiny
         end
